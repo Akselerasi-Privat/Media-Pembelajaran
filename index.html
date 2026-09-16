@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator Media Pembelajaran</title>
+    <!-- Pustaka PDF.js untuk membaca file PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    </script>
+    
+    <style>
+        :root { --primary: #2563eb; --primary-hover: #1d4ed8; --bg-color: #f8fafc; --card-bg: #ffffff; --text-dark: #0f172a; --text-light: #64748b; --success: #10b981; --border: #e2e8f0; }
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, sans-serif; background-color: var(--bg-color); color: var(--text-dark); display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { width: 250px; background: var(--card-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 0; }
+        .brand { font-size: 18px; font-weight: bold; color: var(--primary); padding: 0 20px 20px 20px; border-bottom: 1px solid var(--border); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;}
+        .nav-btn { padding: 12px 20px; margin: 0 15px 5px 15px; border-radius: 8px; cursor: pointer; color: var(--text-light); font-weight: 500; transition: 0.2s; display: flex; align-items: center; gap: 10px;}
+        .nav-btn:hover { background: #f1f5f9; color: var(--text-dark); }
+        .nav-btn.active { background: var(--primary); color: white; }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 30px; }
+        .page-section { display: none; flex-direction: column; gap: 20px; max-width: 900px; margin: 0 auto; width: 100%; }
+        .page-section.active-page { display: flex; }
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .card-title { margin: 0 0 15px 0; font-size: 18px; color: var(--text-dark); }
+        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+        .form-row { display: flex; gap: 20px; margin-bottom: 20px;}
+        .form-row .form-group { margin-bottom: 0; flex: 1;}
+        .form-group label { font-weight: 600; font-size: 14px; }
+        
+        .toolbar-naskah { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 5px; }
+        .btn-small { background: #e2e8f0; color: #334155; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-small:hover { background: #cbd5e1; }
+        .btn-small-primary { background: #dbeafe; color: #1d4ed8; }
+        .btn-small-primary:hover { background: #bfdbfe; }
+        
+        .input-text, .input-textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 14px; box-sizing: border-box; outline: none; transition: 0.2s;}
+        .input-text:focus, .input-textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        .btn { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; text-align: center; font-size: 14px;}
+        .btn:hover { background: var(--primary-hover); }
+        .btn-success { background: var(--success); }
+        .btn-success:hover { background: #059669; }
+        .code-box { width: 100%; height: 120px; background: #1e293b; color: #a7f3d0; padding: 15px; border-radius: 8px; font-family: 'Consolas', monospace; font-size: 13px; border: none; resize: vertical; box-sizing: border-box; margin-bottom: 15px;}
+        .copy-btn { background: #e2e8f0; color: #334155; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: bold; float: right; margin-bottom: 5px;}
+        .preview-container { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: white; height: 600px; display: flex; flex-direction: column;}
+        .preview-header { background: #f8fafc; padding: 12px 20px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 14px; display: flex; justify-content: space-between; align-items: center;}
+        iframe { width: 100%; height: 100%; border: none; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="brand">🎓 Media Pembelajaran</div>
+        <div class="nav-btn active" onclick="bukaTab('generator', this)">📝 Buat Media (Kuis)</div>
+        <div class="nav-btn" onclick="bukaTab('preview', this)">🌐 Pratinjau & Kode</div>
+    </div>
+    <div class="main-content">
+        <div id="tab-generator" class="page-section active-page">
+            <div class="card">
+                <h2 class="card-title">Rakit Ujian Interaktif Baru</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Mata Pelajaran</label>
+                        <input type="text" id="input-mapel" class="input-text" placeholder="Contoh: Matematika Paket C">
+                    </div>
+                    <div class="form-group">
+                        <label>Kelas/Program</label>
+                        <input type="text" id="input-kelas" class="input-text" placeholder="Contoh: Program Kesetaraan">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Waktu Pengerjaan (Menit)</label>
+                        <input type="number" id="input-waktu" class="input-text" placeholder="Contoh: 60 (Isi 0 jika tanpa batas)">
+                    </div>
+                    <div class="form-group">
+                        <label>Nomor WA Guru</label>
+                        <input type="text" id="input-wa" class="input-text" placeholder="Contoh: 6281234567890">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="toolbar-naskah">
+                        <div>
+                            <label>Naskah Materi & Soal</label>
+                            <p style="color: var(--text-light); font-size: 12px; margin: 4px 0 0 0;">(Beri tanda * pada jawaban. Gunakan <strong>Undo</strong> jika tidak sengaja terhapus).</p>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <!-- TOMBOL UNDO -->
+                            <button type="button" class="btn-small" onclick="lakukanUndo()">↩️ Undo</button>
+                            <!-- TOMBOL INPUT PDF -->
+                            <label for="input-pdf" class="btn-small btn-small-primary" style="cursor:pointer;" id="label-pdf">📄 Ekstrak Teks dari PDF</label>
+                            <input type="file" id="input-pdf" accept=".pdf" style="display:none;" onchange="prosesPDF(event)">
+                        </div>
+                    </div>
+                    
+                    <textarea id="input-naskah" class="input-textarea" rows="18" placeholder="Ketik manual soal di sini, atau upload PDF menggunakan tombol di atas..." oninput="simpanRiwayat()"></textarea>
+                </div>
+                <button class="btn" style="width: 100%; font-size: 16px; padding: 15px;" onclick="rakitMedia()">⚡ Buat Media Pembelajaran Sekarang</button>
+            </div>
+        </div>
+
+        <div id="tab-preview" class="page-section">
+            <div class="preview-container">
+                <div class="preview-header">
+                    <span>Layar Interaktif Siswa</span>
+                    <button class="btn btn-success" style="padding: 6px 12px;" onclick="downloadHtmlUtuh()">📥 Download File .html</button>
+                </div>
+                <iframe id="layar-preview"></iframe>
+            </div>
+            <div class="card" style="margin-top: 20px;">
+                <h2 class="card-title">Source Code (Opsional)</h2>
+                <div><button class="copy-btn" onclick="salinKode('kode-html')">Salin HTML</button><label style="font-weight: bold; font-size: 14px;">HTML</label><textarea id="kode-html" class="code-box" readonly></textarea></div>
+                <div><button class="copy-btn" onclick="salinKode('kode-css')">Salin CSS</button><label style="font-weight: bold; font-size: 14px;">CSS</label><textarea id="kode-css" class="code-box" readonly></textarea></div>
+                <div><button class="copy-btn" onclick="salinKode('kode-js')">Salin JS</button><label style="font-weight: bold; font-size: 14px;">JavaScript</label><textarea id="kode-js" class="code-box" readonly></textarea></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- SISTEM UNDO ---
+        let riwayatTeks = [];
+        window.onload = function() {
+            simpanRiwayat(); // Simpan state awal yang kosong
+        };
+
+        function simpanRiwayat() {
+            let naskah = document.getElementById("input-naskah");
+            // Hanya simpan jika ada perubahan baru
+            if (riwayatTeks.length === 0 || riwayatTeks[riwayatTeks.length - 1] !== naskah.value) {
+                riwayatTeks.push(naskah.value);
+                if(riwayatTeks.length > 30) { riwayatTeks.shift(); } // Batasi memori hingga 30 riwayat terakhir
+            }
+        }
+
+        function lakukanUndo() {
+            let naskah = document.getElementById("input-naskah");
+            if (riwayatTeks.length > 1) {
+                riwayatTeks.pop(); // Buang teks yang sekarang
+                naskah.value = riwayatTeks[riwayatTeks.length - 1]; // Tampilkan teks sebelumnya
+            } else if (riwayatTeks.length === 1) {
+                naskah.value = "";
+                riwayatTeks = [""];
+            }
+        }
+
+        // --- SISTEM EKSTRAK PDF ---
+        async function prosesPDF(event) {
+            let file = event.target.files[0];
+            if (!file) return;
+
+            let labelBtn = document.getElementById("label-pdf");
+            let teksAsliBtn = labelBtn.innerText;
+            labelBtn.innerText = "⏳ Sedang Membaca...";
+            
+            try {
+                let fileReader = new FileReader();
+                fileReader.onload = async function() {
+                    let typedarray = new Uint8Array(this.result);
+                    let pdf = await pdfjsLib.getDocument(typedarray).promise;
+                    let teksHasil = "";
+                    
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        let page = await pdf.getPage(i);
+                        let textContent = await page.getTextContent();
+                        
+                        // Coba merangkai teks berdasarkan posisi (y) agar pergantian baris lumayan rapi
+                        let teksHalaman = "";
+                        let posisiYTerakhir = -1;
+
+                        textContent.items.forEach(function(item) {
+                            if (posisiYTerakhir !== -1 && Math.abs(item.transform[5] - posisiYTerakhir) > 5) {
+                                teksHalaman += "\n";
+                            }
+                            teksHalaman += item.str;
+                            posisiYTerakhir = item.transform[5];
+                        });
+
+                        teksHasil += teksHalaman + "\n\n";
+                    }
+
+                    // Tambahkan ke dalam kotak teks (tidak menimpa teks yang sudah ada, tapi menyambung di bawah)
+                    let naskah = document.getElementById("input-naskah");
+                    let nilaiSebelumnya = naskah.value.trim();
+                    naskah.value = nilaiSebelumnya ? nilaiSebelumnya + "\n\n" + teksHasil : teksHasil;
+                    
+                    simpanRiwayat(); // Simpan riwayat setelah PDF masuk agar bisa di-Undo
+                    
+                    labelBtn.innerText = teksAsliBtn;
+                    alert("PDF berhasil diekstrak!\n\nSilakan periksa dan rapikan kembali teksnya, lalu jangan lupa beri tanda bintang (*) pada jawaban yang benar.");
+                    document.getElementById("input-pdf").value = ""; // Reset input file
+                };
+                fileReader.readAsArrayBuffer(file);
+            } catch (error) {
+                alert("Gagal membaca PDF. Pastikan file tidak terkunci (password).");
+                labelBtn.innerText = teksAsliBtn;
+            }
+        }
+
+
+        // --- FUNGSI BAWAAN WEB ---
+        function bukaTab(tabId, element) {
+            document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active-page'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active-page');
+            element.classList.add('active');
+        }
+
+        function rakitMedia() {
+            let teksSoal = document.getElementById("input-naskah").value.trim();
+            let waNumber = document.getElementById("input-wa").value.trim() || "6280000000000";
+            let mapel = document.getElementById("input-mapel").value.trim() || "Ujian / Evaluasi";
+            let kelasGuru = document.getElementById("input-kelas").value.trim() || "Umum";
+            let waktuStr = document.getElementById("input-waktu").value.trim();
+            let waktu = parseInt(waktuStr) || 0; 
+
+            if (!teksSoal) { alert("Naskah soal belum diisi!"); return; }
+
+            let blokTeks = teksSoal.split(/\n\s*\n/);
+            let htmlSoalRakit = "";
+            let jumlahSoalObjektif = 0;
+
+            blokTeks.forEach(function(blok, index) {
+                blok = blok.trim();
+                if (!blok) return;
+
+                let isSoal = /^\d+[\.\)]/.test(blok);
+
+                if (isSoal) {
+                    let baris = blok.split('\n').map(b => b.trim()).filter(b => b !== '');
+                    let teksPertanyaan = baris[0];
+                    let daftarOpsi = baris.slice(1);
+                    
+                    let opsiPG = daftarOpsi.filter(b => /^[\*]?[A-Ea-e][\.\)]/.test(b));
+                    let kunciIsian = daftarOpsi.filter(b => b.startsWith('*') && !/^[\*]?[A-Ea-e][\.\)]/.test(b));
+
+                    if (teksPertanyaan.toLowerCase().includes('(isian)') || teksPertanyaan.toLowerCase().includes('singkat')) {
+                        let kunciJawaban = kunciIsian.length > 0 ? kunciIsian[0].substring(1).trim().toLowerCase() : "";
+                        htmlSoalRakit += '<div class="kartu-soal"><p class="pertanyaan" data-teks="' + teksPertanyaan.replace(/"/g, '&quot;') + '"><strong>' + teksPertanyaan + '</strong></p><input type="text" class="input-isian" data-kunci="' + kunciJawaban + '" placeholder="Ketik jawaban singkat di sini..."><small class="catatan">*Sistem akan menilai otomatis (pastikan ejaan/angka tepat).</small></div>';
+                    } else if (opsiPG.length === 0 || teksPertanyaan.toLowerCase().includes('esai') || teksPertanyaan.toLowerCase().includes('uraian')) {
+                        htmlSoalRakit += '<div class="kartu-soal"><p class="pertanyaan" data-teks="' + teksPertanyaan.replace(/"/g, '&quot;') + '"><strong>' + teksPertanyaan + '</strong></p><textarea class="input-esai" rows="4" placeholder="Ketik jawaban esai panjang di sini..."></textarea><small class="catatan">*Jawaban Anda akan dikirim ke WhatsApp guru untuk dinilai manual.</small></div>';
+                    } else {
+                        jumlahSoalObjektif++;
+                        let opsiHtml = "";
+                        let jumlahBintang = opsiPG.filter(o => o.startsWith('*')).length;
+                        let tipeInput = (jumlahBintang > 1 || teksPertanyaan.toLowerCase().includes('kompleks')) ? 'checkbox' : 'radio';
+
+                        opsiPG.forEach(function(opsi) {
+                            let isKunci = opsi.startsWith('*');
+                            let teksTampil = isKunci ? opsi.substring(1).trim() : opsi;
+                            let valueTanam = isKunci ? 'benar' : 'salah';
+                            let namaGrup = 'soal_obj_' + jumlahSoalObjektif + (tipeInput === 'checkbox' ? '[]' : '');
+                            opsiHtml += '<label class="label-opsi"><input type="' + tipeInput + '" name="' + namaGrup + '" value="' + valueTanam + '"> ' + teksTampil + '</label>';
+                        });
+                        htmlSoalRakit += '<div class="kartu-soal"><p class="pertanyaan"><strong>' + teksPertanyaan + '</strong></p><div class="wadah-opsi">' + opsiHtml + '</div></div>';
+                    }
+                } else {
+                    let teksCerita = blok.replace(/\n/g, '<br>');
+                    htmlSoalRakit += '<div class="kartu-bacaan"><p class="teks-bacaan">' + teksCerita + '</p></div>';
+                }
+            });
+
+            // HTML KELUARAN 
+            let htmlKeluaran = '<div class="wadah-media">\n    <div id="halaman-login" class="header-media">\n        <h2 style="text-align:center; color:#2563eb;">' + mapel + '</h2>\n        <p style="text-align:center; color:#64748b; margin-top:0;">Kelas: ' + kelasGuru + ' | Waktu: ' + (waktu > 0 ? waktu + ' Menit' : 'Tidak Dibatasi') + '</p>\n        <hr style="border:0; border-top:1px solid #e2e8f0; margin:20px 0;">\n        <div style="display:flex; flex-direction:column; gap:15px;">\n            <div><label style="font-weight:bold; font-size:14px;">Nama Lengkap Siswa:</label><br><input type="text" id="siswa-nama" class="input-nama" placeholder="Ketik nama lengkap..."></div>\n            <div><label style="font-weight:bold; font-size:14px;">Kelas Anda:</label><br><input type="text" id="siswa-kelas" class="input-nama" placeholder="Ketik kelas Anda..."></div>\n            <button class="btn-cek-nilai" onclick="mulaiUjian()" style="margin-top:10px;">🚀 Mulai Mengerjakan</button>\n        </div>\n    </div>\n    <div id="halaman-ujian" style="display:none;">\n        <div id="header-timer" style="background:#1e293b; color:white; padding:15px; border-radius:10px; margin-bottom:20px; display:' + (waktu > 0 ? 'flex' : 'none') + '; justify-content:space-between; align-items:center; position:sticky; top:10px; z-index:100; box-shadow:0 4px 6px rgba(0,0,0,0.1);"><span style="font-weight:bold;">⏳ Sisa Waktu:</span><span id="display-waktu" style="font-size:22px; font-weight:bold; color:#facc15;">--:--</span></div>\n        <div id="area-soal">\n' + htmlSoalRakit + '\n        </div>\n        <div class="kartu-aksi">\n            <button id="btn-kumpul" class="btn-cek-nilai" onclick="koreksiJawaban()">Kumpulkan & Cek Skor Otomatis</button>\n            <div id="area-hasil" style="display:none; text-align:center; margin-top:25px;">\n                <p style="color:#64748b; margin-bottom:5px; font-weight:bold;">Skor (PG, Kompleks, & Isian Singkat)</p>\n                <h1 id="tampil-skor" style="font-size:56px; margin:0; color:#2563eb;">0</h1>\n                <button class="btn-kirim-wa" onclick="kirimKeWhatsApp()">Kirim Semua Jawaban ke WhatsApp Guru</button>\n            </div>\n        </div>\n    </div>\n</div>';
+
+            // CSS KELUARAN
+            let cssKeluaran = "body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f1f5f9; padding: 20px; display: flex; justify-content: center; margin: 0; }\n.wadah-media { width: 100%; max-width: 750px; display: flex; flex-direction: column; gap: 20px; padding-bottom: 40px; }\n.header-media, .kartu-soal, .kartu-aksi { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }\n.header-media { border-top: 6px solid #2563eb; }\n.input-nama, .input-isian { width: 100%; padding: 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; box-sizing: border-box; outline: none; margin-top: 5px; transition:0.2s; }\n.input-nama:focus, .input-isian:focus { border-color: #2563eb; }\n.kartu-bacaan { background: #fef3c7; border: 1px solid #fde68a; padding: 20px; border-radius: 12px; }\n.teks-bacaan { margin: 0; color: #78350f; line-height: 1.6; font-size: 15px; }\n.pertanyaan { font-size: 15px; color: #1e293b; margin-top: 0; line-height: 1.6; }\n.wadah-opsi { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }\n.label-opsi { background: #f8fafc; padding: 14px 16px; border-radius: 8px; border: 1px solid #e2e8f0; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 10px; transition: 0.2s; }\n.label-opsi:hover { background: #f1f5f9; border-color: #cbd5e1; }\n.input-esai { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; font-size: 14px; box-sizing: border-box; resize: vertical; margin-top:10px; outline:none; }\n.catatan { color: #94a3b8; display: block; margin-top: 5px; font-size:12px; }\n.btn-cek-nilai { background: #2563eb; color: white; border: none; padding: 16px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.2s; }\n.btn-cek-nilai:hover { background: #1d4ed8; }\n.btn-kirim-wa { background: #10b981; color: white; border: none; padding: 14px; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; transition: 0.2s; }\n.btn-kirim-wa:hover { background: #059669; }";
+
+            // JS KELUARAN 
+            let jsKeluaran = "let skorFinal = 0;\nlet waktuTersisa = " + (waktu * 60) + ";\nlet adaWaktu = " + (waktu > 0) + ";\nlet intervalTimer;\n\nfunction mulaiUjian() {\n    let nama = document.getElementById('siswa-nama').value.trim();\n    let kelas = document.getElementById('siswa-kelas').value.trim();\n    if(!nama || !kelas) { alert('Harap isi Nama dan Kelas Anda terlebih dahulu!'); return; }\n    document.getElementById('halaman-login').style.display = 'none';\n    document.getElementById('halaman-ujian').style.display = 'block';\n    window.scrollTo({ top: 0, behavior: 'smooth' });\n    if(adaWaktu) {\n        updateWaktu();\n        intervalTimer = setInterval(function() {\n            waktuTersisa--; updateWaktu();\n            if(waktuTersisa <= 0) { clearInterval(intervalTimer); alert('Waktu Habis! Jawaban otomatis dikumpulkan.'); koreksiJawaban(); }\n        }, 1000);\n    }\n}\n\nfunction updateWaktu() {\n    let menit = Math.floor(waktuTersisa / 60); let detik = waktuTersisa % 60;\n    document.getElementById('display-waktu').innerText = (menit < 10 ? '0'+menit : menit) + ':' + (detik < 10 ? '0'+detik : detik);\n}\n\nfunction koreksiJawaban() {\n    clearInterval(intervalTimer);\n    let semuaOpsiBenar = document.querySelectorAll('input[value=\"benar\"]').length;\n    let semuaSoalIsian = document.querySelectorAll('.input-isian');\n    let totalBobotSistem = semuaOpsiBenar + semuaSoalIsian.length;\n    let ceklisBenar = document.querySelectorAll('input[value=\"benar\"]:checked').length;\n    let ceklisSalah = document.querySelectorAll('input[value=\"salah\"]:checked').length;\n    let isianBenar = 0;\n    semuaSoalIsian.forEach(function(el) {\n        if(el.value.trim().toLowerCase() === el.getAttribute('data-kunci')) { isianBenar++; }\n    });\n    if(totalBobotSistem > 0) {\n        let skorMentah = (ceklisBenar - (ceklisSalah * 0.5)) + isianBenar;\n        if (skorMentah < 0) skorMentah = 0;\n        skorFinal = Math.round((skorMentah / totalBobotSistem) * 100);\n    } else { skorFinal = 0; }\n    document.getElementById('tampil-skor').innerText = skorFinal;\n    document.getElementById('area-hasil').style.display = 'block';\n    document.getElementById('btn-kumpul').style.display = 'none';\n    let kunciSemua = document.querySelectorAll('input, textarea');\n    for(let i=0; i<kunciSemua.length; i++) { kunciSemua[i].disabled = true; }\n    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });\n}\n\nfunction kirimKeWhatsApp() {\n    let nama = document.getElementById('siswa-nama').value.trim();\n    let kelas = document.getElementById('siswa-kelas').value.trim();\n    let teksEsai = '';\n    let semuaSoalEsai = document.querySelectorAll('.input-esai');\n    if (semuaSoalEsai.length > 0) {\n        teksEsai += '\\n\\n📝 *JAWABAN ESAI SISWA:*\\n';\n        semuaSoalEsai.forEach(function(el, index) {\n            let jawabanSiswa = el.value.trim() || '_Tidak dijawab_';\n            let soalTeks = el.previousElementSibling.getAttribute('data-teks') || ('Soal Esai ' + (index + 1));\n            teksEsai += 'Q: ' + soalTeks + '\\nA: ' + jawabanSiswa + '\\n\\n';\n        });\n    }\n    let pesanWA = '📚 *LAPORAN HASIL UJIAN*\\n\\n📖 Mapel: *" + mapel + "*\\n👤 Nama: *' + nama + '*\\n🏫 Kelas: *' + kelas + '*\\n🎯 Skor Auto (PG/Isian): *' + skorFinal + ' / 100*' + teksEsai;\n    window.open('https://wa.me/" + waNumber + "?text=' + encodeURIComponent(pesanWA), '_blank');\n}";
+
+            document.getElementById("kode-html").value = htmlKeluaran;
+            document.getElementById("kode-css").value = cssKeluaran;
+            document.getElementById("kode-js").value = jsKeluaran;
+
+            let gabunganKode = "<!DOCTYPE html>\n<html lang=\"id\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>Ujian Interaktif</title>\n<style>\n" + cssKeluaran + "\n</style>\n</head>\n<body>\n" + htmlKeluaran + "\n<script>\n" + jsKeluaran + "\n</" + "script>\n</body>\n</html>";
+            
+            let framePreview = document.getElementById("layar-preview").contentWindow.document;
+            framePreview.open();
+            framePreview.write(gabunganKode);
+            framePreview.close();
+
+            bukaTab('preview', document.querySelectorAll('.nav-btn')[1]);
+        }
+
+        function salinKode(idElemen) {
+            document.getElementById(idElemen).select(); document.execCommand("copy"); alert("Kode berhasil disalin!");
+        }
+
+        function downloadHtmlUtuh() {
+            let htmlK = document.getElementById("kode-html").value;
+            let cssK = document.getElementById("kode-css").value;
+            let jsK = document.getElementById("kode-js").value;
+            if(!htmlK) { alert("Buat media terlebih dahulu!"); return; }
+            let gabungan = "<!DOCTYPE html>\n<html lang=\"id\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>Evaluasi Pembelajaran</title>\n<style>\n" + cssK + "\n</style>\n</head>\n<body>\n" + htmlK + "\n<script>\n" + jsK + "\n</" + "script>\n</body>\n</html>";
+            let blob = new Blob([gabungan], { type: 'text/html' });
+            let tautan = document.createElement('a'); tautan.href = URL.createObjectURL(blob); tautan.download = 'ujian-interaktif.html'; tautan.click();
+        }
+    </script>
+</body>
+</html>
